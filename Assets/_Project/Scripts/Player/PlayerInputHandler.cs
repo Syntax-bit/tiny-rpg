@@ -9,6 +9,7 @@ public class PlayerInputHandler : MonoBehaviour
     public Vector2 RotationInput { get; private set; }
     public bool JumpTriggered { get; private set; }
     public bool LeftMouseButtonPressed { get; private set; }
+    public bool RightMouseButtonPressed { get; private set; }
     public bool BothMouseButtonsPressed { get; private set; }
 
     private InputActionMap playerActionMap;
@@ -18,6 +19,7 @@ public class PlayerInputHandler : MonoBehaviour
     private InputAction jumpAction;
     private InputAction bothButtonsAction;
     private InputAction leftMouseButtonAction;
+    private InputAction rightMouseButtonAction;
 
     private void Awake()
     {
@@ -28,6 +30,7 @@ public class PlayerInputHandler : MonoBehaviour
         jumpAction = playerActionMap.FindAction("Jump");
         bothButtonsAction = playerActionMap.FindAction("BothMouseButtons");
         leftMouseButtonAction = playerActionMap.FindAction("LeftClick");
+        rightMouseButtonAction = playerActionMap.FindAction("RightClick");
 
         SetupInputEvents();
     }
@@ -48,6 +51,9 @@ public class PlayerInputHandler : MonoBehaviour
 
         leftMouseButtonAction.performed += inputInfo => LeftMouseButtonPressed = true;
         leftMouseButtonAction.canceled += inputInfo => LeftMouseButtonPressed = false;
+
+        rightMouseButtonAction.performed += inputInfo => RightMouseButtonPressed = true;
+        rightMouseButtonAction.canceled += inputInfo => RightMouseButtonPressed = false;
     }
 
     private void OnEnable()
