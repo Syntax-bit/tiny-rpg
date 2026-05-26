@@ -3,105 +3,124 @@ using Unity.Cinemachine;
 using UnityEngine.InputSystem;
 using System.Collections;
 
-public class PlayerCamera : MonoBehaviour
+namespace TinyRPG.Player
 {
-    [Header("Settings")]
-    [SerializeField] private float waitTime = 0.5f;
-    [SerializeField] private float catchUpTime = .1f;
-
-    private CinemachineInputAxisController axisController;
-
-    private CinemachineInputAxisController.Controller lookXController;
-    private CinemachineInputAxisController.Controller lookYController;
-    private CinemachineOrbitalFollow cinemachineOrbitalFollow;
-
-    private PlayerInputHandler playerInputHandler;
-    private Transform playerTransform;
-
-    private Coroutine recenteringCoroutine;
-    private bool isRecentered;
-
-    private void Awake()
+    public class PlayerCamera : MonoBehaviour
     {
-        playerTransform = GameObject.Find("Player").transform;
+        [Header("Settings")]
+        [SerializeField] private float waitTime = 0.5f;
+        [SerializeField] private float catchUpTime = .1f;
 
-        playerInputHandler = playerTransform.GetComponent<PlayerInputHandler>();
+        private CinemachineInputAxisController axisController;
 
-        axisController = GetComponent<CinemachineInputAxisController>();
-        cinemachineOrbitalFollow = GetComponent<CinemachineOrbitalFollow>();
+        private CinemachineInputAxisController.Controller lookXController;
+        private CinemachineInputAxisController.Controller lookYController;
+        private CinemachineOrbitalFollow cinemachineOrbitalFollow;
 
-        if (axisController != null && axisController.Controllers.Count >= 2)
+        private PlayerInputHandler playerInputHandler;
+        private Transform playerTransform;
+
+        private Vector2 cursorPositionOnClick;
+        private bool wasDraggingLastFrame;
+
+        private void Awake()
         {
-            lookXController = axisController.Controllers[0];
-            lookYController = axisController.Controllers[1];
-        }
-    }
+            playerTransform = GameObject.Find("Player").transform;
 
-    private void Start()
-    {
-        cinemachineOrbitalFollow.HorizontalAxis.Recentering.Wait = waitTime;
-    }
+            playerInputHandler = playerTransform.GetComponent<PlayerInputHandler>();
 
-    private void Update()
-    {
-        if (axisController == null || cinemachineOrbitalFollow == null) return;
+            axisController = GetComponent<CinemachineInputAxisController>();
+            cinemachineOrbitalFollow = GetComponent<CinemachineOrbitalFollow>();
 
-        bool isLooking = playerInputHandler.LeftMouseButtonPressed;
-
-        lookXController.Enabled = isLooking;
-        lookYController.Enabled = isLooking;
-
-        if (isLooking)
-        {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-            SetRecenteringState(enable: false, forceSnap: false);
-        }
-        else
-        {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-
-            bool isMoving = playerInputHandler.MovementInput != Vector2.zero;
-
-            if (isMoving)
+            if (axisController != null && axisController.Controllers.Count >= 2)
             {
-                Vector3 flatCameraForward = new Vector3(transform.forward.x, 0f, transform.forward.z).normalized;
-                float angleDelta = Vector3.Dot(flatCameraForward, playerTransform.forward);
+                lookXController = axisController.Controllers[0];
+                lookYController = axisController.Controllers[1];
+            }
+        }
 
-                if (angleDelta >= .99f)
+        private void Start()
+        {
+            cinemachineOrbitalFollow.HorizontalAxis.Recentering.Wait = waitTime;
+        }
+
+        private void Update()
+        {
+            bool isLooking = playerInputHandler.LeftMouseButtonHeld;
+
+            lookXController.Enabled = isLooking;
+            lookYController.Enabled = isLooking;
+
+            if(!isLooking)
+            {
+                lookXController.InputValue = 0;
+                lookYController.InputValue = 0;
+            }
+
+            if (isLooking)
+            {
+                if (!wasDraggingLastFrame)
                 {
-                    SetRecenteringState(enable: true, forceSnap: true);
+                    cursorPositionOnClick = Mouse.current.position.ReadValue();
+                    wasDraggingLastFrame = true;
                 }
-                else
-                {
-                    SetRecenteringState(enable: true, forceSnap: false);
-                }
+
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+                SetRecenteringState(enable: false, forceSnap: false);
             }
             else
             {
-                SetRecenteringState(enable: false, forceSnap: false);
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+
+                if (wasDraggingLastFrame)
+                {
+                    Mouse.current.WarpCursorPosition(cursorPositionOnClick);
+                    wasDraggingLastFrame = false;
+                }
+
+                bool isMoving = playerInputHandler.MovementInput != Vector2.zero;
+
+                if (isMoving)
+                {
+                    Vector3 flatCameraForward = new Vector3(transform.forward.x, 0f, transform.forward.z).normalized;
+                    float angleDelta = Vector3.Dot(flatCameraForward, playerTransform.forward);
+
+                    if (angleDelta >= .99f)
+                    {
+                        SetRecenteringState(true, forceSnap: true);
+                    }
+                    else
+                    {
+                        SetRecenteringState(true, forceSnap: false);
+                    }
+                }
+                else
+                {
+                    SetRecenteringState(false, forceSnap: false);
+                }
             }
         }
-    }
 
-    private void SetRecenteringState(bool enable, bool forceSnap)
-    {
-        InputAxis axis = cinemachineOrbitalFollow.HorizontalAxis;
-        float targetTime = forceSnap ? 0f : catchUpTime;
-
-        if (axis.Recentering.Enabled != enable || axis.Recentering.Time != targetTime)
+        private void SetRecenteringState(bool enable, bool forceSnap)
         {
-            axis.Recentering.Enabled = enable;
-            axis.Recentering.Time = targetTime;
+            InputAxis axis = cinemachineOrbitalFollow.HorizontalAxis;
+            float targetTime = forceSnap ? 0f : catchUpTime;
 
-            cinemachineOrbitalFollow.HorizontalAxis = axis;
+            if (axis.Recentering.Enabled != enable || axis.Recentering.Time != targetTime)
+            {
+                axis.Recentering.Enabled = enable;
+                axis.Recentering.Time = targetTime;
+
+                cinemachineOrbitalFollow.HorizontalAxis = axis;
+            }
         }
-    }
 
-    private void OnDisable()
-    {
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        private void OnDisable()
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
     }
 }

@@ -4,80 +4,84 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class InteractionCastbar : MonoBehaviour
+namespace TinyRPG.UI
 {
-    [Header("Settings")]
-    [SerializeField] private float fadeStartTime = .25f;
-    [SerializeField] private float fadeTime = .5f;
-
-    [SerializeField] private Color normalColor;
-    [SerializeField] private Color canceledColor;
-
-    private Image castbarFill;
-    private TMP_Text castbarText;
-    private CanvasGroup canvasGroup;
-
-    private Coroutine fadeCoroutine;
-
-    private void Awake()
+    public class InteractionCastbar : MonoBehaviour
     {
-        castbarFill = transform.Find("CastbarFill").GetComponent<Image>();
-        castbarText = transform.Find("CastbarText").GetComponent<TMP_Text>();
-        canvasGroup = GetComponent<CanvasGroup>();
+        [Header("Settings")]
+        [SerializeField] private float fadeStartTime = .25f;
+        [SerializeField] private float fadeTime = .5f;
 
-        Hide();
-    }
+        [SerializeField] private Color normalColor;
+        [SerializeField] private Color canceledColor;
 
-    public void Show(string prompt)
-    {
-        if(fadeCoroutine != null)
+        private Image castbarFill;
+        private TMP_Text castbarText;
+        private CanvasGroup canvasGroup;
+
+        private Coroutine fadeCoroutine;
+
+        private void Awake()
         {
-            StopCoroutine(fadeCoroutine);
+            castbarFill = transform.Find("CastbarFill").GetComponent<Image>();
+            castbarText = transform.Find("CastbarText").GetComponent<TMP_Text>();
+            canvasGroup = GetComponent<CanvasGroup>();
+
+            Hide();
         }
 
-        castbarFill.color = normalColor;
-        castbarText.text = prompt;
-        castbarFill.fillAmount = 0;
-
-        canvasGroup.alpha = 1;
-        gameObject.SetActive(true);
-    }
-
-    public void Hide()
-    {
-        gameObject.SetActive(false);
-    }
-
-    public void Cancel()
-    {
-        castbarText.text = "Canceled";
-        castbarFill.color = canceledColor;
-
-        fadeCoroutine = StartCoroutine(CanceledCoroutine());
-    }
-
-    IEnumerator CanceledCoroutine()
-    {
-        float elapsed = 0f;
-
-        float startValue = 1f;
-        float endValue = 0f;
-
-        yield return new WaitForSeconds(fadeStartTime);
-
-        while(elapsed < fadeTime)
+        public void Show(string prompt)
         {
-            canvasGroup.alpha = Mathf.Lerp(startValue, endValue, elapsed / fadeTime);
+            if (fadeCoroutine != null)
+            {
+                StopCoroutine(fadeCoroutine);
+            }
 
-            elapsed += Time.deltaTime;
-            yield return null;
+            castbarFill.color = normalColor;
+            castbarText.text = prompt;
+            castbarFill.fillAmount = 0;
+
+            canvasGroup.alpha = 1;
+            gameObject.SetActive(true);
         }
 
-        Hide();
+        public void Hide()
+        {
+            gameObject.SetActive(false);
+        }
+
+        public void Cancel()
+        {
+            castbarText.text = "Canceled";
+            castbarFill.color = canceledColor;
+
+            fadeCoroutine = StartCoroutine(CanceledCoroutine());
+        }
+
+        IEnumerator CanceledCoroutine()
+        {
+            float elapsed = 0f;
+
+            float startValue = 1f;
+            float endValue = 0f;
+
+            yield return new WaitForSeconds(fadeStartTime);
+
+            while (elapsed < fadeTime)
+            {
+                canvasGroup.alpha = Mathf.Lerp(startValue, endValue, elapsed / fadeTime);
+
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+
+            Hide();
+        }
+
+        public void UpdateProgressBar(float normalizedFillAmount)
+        {
+            castbarFill.fillAmount = normalizedFillAmount;
+        }
     }
 
-    public void UpdateProgressBar(float normalizedFillAmount)
-    {
-        castbarFill.fillAmount = normalizedFillAmount;
-    }
 }

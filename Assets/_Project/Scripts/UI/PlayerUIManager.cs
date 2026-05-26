@@ -1,24 +1,45 @@
+using TinyRPG.Gameplay;
 using UnityEngine;
 
-public class PlayerUIManager : MonoBehaviour
+namespace TinyRPG.UI
 {
-    public static PlayerUIManager Instance;
-
-    [SerializeField] private InteractionCastbar interactionCastbar;
-
-    private void Awake()
+    public class PlayerUIManager : MonoBehaviour
     {
-        if (Instance != null && Instance != this)
+        public static PlayerUIManager Instance;
+
+        [field: SerializeField] public NameplateManager nameplateManager {  get; private set; }
+        [SerializeField] private UnitFrame playerUnitFrame;
+        [SerializeField] private UnitFrame selectedTargetUnitFrame;
+        [SerializeField] private InteractionCastbar interactionCastbar;
+
+        private Unit playerUnit;
+
+        private void Awake()
         {
-            Destroy(gameObject);
-            return;
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            Instance = this;
+
+            playerUnit = GetComponent<Unit>();
         }
 
-        Instance = this;
-    }
+        private void Start()
+        {
+            playerUnitFrame.Show(playerUnit);
+        }
 
-    public void ShowInteractionBar(string prompt) => interactionCastbar.Show(prompt);
-    public void SetInteractionBarProgress(float fillAmount) => interactionCastbar.UpdateProgressBar(fillAmount);
-    public void HideInteractionBar() => interactionCastbar.Hide();
-    public void CancelInteraction() => interactionCastbar.Cancel();
+        //Interaction Bar
+        public void ShowInteractionBar(string prompt) => interactionCastbar.Show(prompt);
+        public void SetInteractionBarProgress(float fillAmount) => interactionCastbar.UpdateProgressBar(fillAmount);
+        public void HideInteractionBar() => interactionCastbar.Hide();
+        public void CancelInteraction() => interactionCastbar.Cancel();
+
+        //Target Frames
+        public void ShowSelectedTargetFrame(Unit unit) => selectedTargetUnitFrame.Show(unit);
+        public void HideSelectedTargetFrame() => selectedTargetUnitFrame.Hide();
+    }
 }
