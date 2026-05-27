@@ -19,7 +19,9 @@ namespace TinyRPG.Player
         public bool RightMouseButtonPressed => rightMouseButtonAction.WasPressedThisFrame();
         public bool BothMouseButtonsPressed => bothButtonsAction.WasPressedThisFrame();
 
+        // Button Inputs
         public bool CancelButtonPressed => cancelAction.WasPressedThisFrame();
+        public bool TabTargetButtonPressed => tabTargetAction.WasPressedThisFrame();
 
         // --- CONTINUOUS HELD STATES ---
         public bool LeftMouseButtonHeld { get; private set; }
@@ -34,6 +36,7 @@ namespace TinyRPG.Player
         private InputAction leftMouseButtonAction;
         private InputAction rightMouseButtonAction;
         private InputAction cancelAction;
+        private InputAction tabTargetAction;
 
         private void Awake()
         {
@@ -46,6 +49,7 @@ namespace TinyRPG.Player
             leftMouseButtonAction = playerActionMap.FindAction("LeftClick");
             rightMouseButtonAction = playerActionMap.FindAction("RightClick");
             cancelAction = playerActionMap.FindAction("Cancel");
+            tabTargetAction = playerActionMap.FindAction("TabTarget");
 
             SetupInputEvents();
         }

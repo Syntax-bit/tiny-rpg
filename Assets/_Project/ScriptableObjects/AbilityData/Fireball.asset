@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1240fd865511b8d4fb5f7cf423e0a910, type: 3}
+  m_Name: Fireball
+  m_EditorClassIdentifier: 
+  label: Fireball
+  animationClip: {fileID: 0}
+  castTime: 1
+  vfxPrefab: {fileID: 47622572448790309, guid: 4e1473f5390fbab4781534ba20bb90bc, type: 3}
+  effects:
+  - rid: 5336749668279779469
+  references:
+    version: 2
+    RefIds:
+    - rid: 5336749668279779469
+      type: {class: DamageEffect, ns: , asm: Assembly-CSharp}
+      data:
+        amount: 10

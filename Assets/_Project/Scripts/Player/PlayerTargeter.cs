@@ -1,3 +1,5 @@
+using NUnit.Framework;
+using System.Collections.Generic;
 using TinyRPG.Gameplay;
 using TinyRPG.UI;
 using UnityEngine;
@@ -7,8 +9,10 @@ namespace TinyRPG.Player
 {
     public class PlayerTargeter : MonoBehaviour
     {
-        private Unit selectedUnit;
-        private bool wasDraggingThisClick;
+        public Unit selectedUnit { get; private set; }
+
+        private List<Unit> unitsInRange = new List<Unit>();
+        private int currentTabTargetIndex;
 
         private Camera mainCamera;
         private PlayerInputHandler playerInputHandler;
@@ -31,6 +35,11 @@ namespace TinyRPG.Player
                 Deselect();
             }
 
+            if(playerInputHandler.TabTargetButtonPressed)
+            {
+                HandleTabTargeting();
+            }
+
             if(Keyboard.current.fKey.wasPressedThisFrame)
             {
                 selectedUnit.TakeDamage(10);
@@ -43,18 +52,47 @@ namespace TinyRPG.Player
 
             if (hoveredUnit != null)
             {
-                Select(hoveredUnit);
+                SelectUnit(hoveredUnit);
             }
         }
 
-        private void Select(Unit unitToSelect)
+        public void SelectUnit(Unit unitToSelect)
         {
+            if (selectedUnit == unitToSelect) return;
+            Unit oldUnit = selectedUnit;
+
+            if (oldUnit != null)
+            {
+                oldUnit.SetSelectionVisual(false);
+
+                if (!unitsInRange.Contains(oldUnit))
+                {
+                    PlayerUIManager.Instance.nameplateManager.RemoveNameplate(oldUnit);
+                }
+            }
+
             selectedUnit = unitToSelect;
-            PlayerUIManager.Instance.ShowSelectedTargetFrame(selectedUnit);
+
+            if (selectedUnit != null)
+            {
+                PlayerUIManager.Instance.nameplateManager.CreateNewNameplate(selectedUnit);
+                PlayerUIManager.Instance.ShowSelectedTargetFrame(selectedUnit);
+                selectedUnit.SetSelectionVisual(true);
+            }
         }
 
         private void Deselect()
         {
+            if (selectedUnit != null)
+            {
+                selectedUnit.SetSelectionVisual(false);
+
+                if(!unitsInRange.Contains(selectedUnit))
+                {
+                    PlayerUIManager.Instance.nameplateManager.RemoveNameplate(selectedUnit);
+                }
+            }
+
             PlayerUIManager.Instance.HideSelectedTargetFrame();
             selectedUnit = null;
         }
@@ -73,6 +111,33 @@ namespace TinyRPG.Player
             }
 
             return null;
+        }
+
+        public void AddToUnitsInRange(Unit unit)
+        {
+            if(unit == null || unitsInRange.Contains(unit)) return;
+
+            unitsInRange.Add(unit);
+        }
+
+        public void RemoveFromUnitsInRange(Unit unit)
+        {
+            if (unit == null || !unitsInRange.Contains(unit)) return;
+
+            unitsInRange.Remove(unit);
+        }
+
+        private void HandleTabTargeting()
+        {
+            if (unitsInRange.Count == 0) return;
+
+            SelectUnit(unitsInRange[currentTabTargetIndex]);
+
+            currentTabTargetIndex++;
+            if (currentTabTargetIndex > unitsInRange.Count - 1)
+            {
+                currentTabTargetIndex = 0;
+            }
         }
     }
 }

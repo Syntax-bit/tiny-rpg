@@ -1,24 +1,32 @@
+using ImprovedTimers;
 using TinyRPG.UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace TinyRPG.Player
 {
-    public class PlayerInteractor : MonoBehaviour
+    public class PlayerInteractor : MonoBehaviour, ICastable
     {
         [SerializeField] private float interactionRange = 2f;
 
         private bool isInteracting;
-        private float currentInteractTime;
         private IInteractable activeInteractable;
+        private CountdownTimer interactionTimer;
 
         private Camera mainCamera;
         private PlayerInputHandler playerInputHandler;
+
+        public string CastActionName => activeInteractable.GetInteractionPrompt();
+        public float CastProgress => interactionTimer.Progress;
+        public bool IsCurrentlyCasting => interactionTimer.IsRunning;
+        public bool InvertFill => false;
 
         private void Awake()
         {
             playerInputHandler = GetComponent<PlayerInputHandler>();
             mainCamera = Camera.main;
+
+            interactionTimer = new CountdownTimer(0f);
         }
 
 
@@ -40,16 +48,24 @@ namespace TinyRPG.Player
         private void StartInteraction(IInteractable interactable)
         {
             activeInteractable = interactable;
-            isInteracting = true;
-            currentInteractTime = 0;
 
-            if (interactable.GetInteractionTime() <= 0)
+            float duration = activeInteractable.GetInteractionTime();
+
+            if (duration <= 0)
             {
                 CompleteInteraction();
                 return;
             }
 
-            PlayerUIManager.Instance.ShowInteractionBar(activeInteractable.GetInteractionPrompt());
+            isInteracting = true;
+
+            interactionTimer.Stop();
+            interactionTimer = new CountdownTimer(duration);
+
+            interactionTimer.OnTimerStop = () => CompleteInteraction();
+            interactionTimer.Start();
+
+            PlayerUIManager.Instance.ShowCastBar(this);
         }
 
         private void HandleActiveInteraction()
@@ -59,20 +75,12 @@ namespace TinyRPG.Player
                 CancelInteraction();
                 return;
             }
-
-            currentInteractTime += Time.deltaTime;
-            float normalizedInteractionTime = currentInteractTime / activeInteractable.GetInteractionTime();
-
-            PlayerUIManager.Instance.SetInteractionBarProgress(normalizedInteractionTime);
-
-            if (normalizedInteractionTime >= 1)
-            {
-                CompleteInteraction();
-            }
         }
 
         private void CompleteInteraction()
         {
+            if (activeInteractable == null) return;
+
             activeInteractable.Interact();
 
             CleanInteraction(true);
@@ -80,21 +88,21 @@ namespace TinyRPG.Player
 
         private void CancelInteraction()
         {
-            PlayerUIManager.Instance.CancelInteraction();
-
-            isInteracting = false;
+            PlayerUIManager.Instance.CancelCastBar();
+            CleanInteraction(false);
         }
 
         private void CleanInteraction(bool hideInstantly)
         {
-            currentInteractTime = 0;
             activeInteractable = null;
             isInteracting = false;
 
             if (hideInstantly)
             {
-                PlayerUIManager.Instance.HideInteractionBar();
+                PlayerUIManager.Instance.HideCastBar();
             }
+
+            interactionTimer.Stop();
         }
 
         private IInteractable GetInteractable()

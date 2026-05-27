@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using TinyRPG.Gameplay;
+using TinyRPG.Player;
 using UnityEngine;
 
 namespace TinyRPG.UI
@@ -7,19 +8,27 @@ namespace TinyRPG.UI
     public class NameplateManager : MonoBehaviour
     {
         [Header("Settings")]
-        [SerializeField] private float maxVisibilityDistance = 20f;
+        [SerializeField] [Range(0f, 1f)] private float minNameplateOpacity = .2f;
+        [SerializeField] private float fadeStartDistance = 5f;
 
         [Header("References")]
         [SerializeField] private GameObject nameplatePrefab;
         [SerializeField] private GameObject nameplateHolder;
 
-        private Dictionary<Unit, RectTransform> activeNameplates = new Dictionary<Unit, RectTransform>();
+        private Dictionary<Unit, Nameplate> activeNameplates = new Dictionary<Unit, Nameplate>();
 
         private Camera mainCamera;
+        private PlayerNameplateDetector playerNameplateDetector;
+        private PlayerTargeter playerTargeter;
 
         private void Awake()
         {
             mainCamera = Camera.main;
+
+            Transform player = GameObject.Find("Player").transform;
+
+            playerTargeter = player.GetComponent<PlayerTargeter>();
+            playerNameplateDetector = player.GetComponentInChildren<PlayerNameplateDetector>();
         }
 
         /// <summary>
@@ -31,19 +40,18 @@ namespace TinyRPG.UI
             if (activeNameplates.ContainsKey(unit) || unit == null) return;
 
             GameObject nameplate = Instantiate(nameplatePrefab, nameplateHolder.transform);
-            RectTransform rectTransform = nameplate.GetComponent<RectTransform>();
             Nameplate nameplateUI = nameplate.GetComponent<Nameplate>();
 
             nameplateUI.Initialize(unit);
 
-            activeNameplates.Add(unit, rectTransform);
+            activeNameplates.Add(unit, nameplateUI);
         }
 
         public void RemoveNameplate(Unit unit)
         {
-            if (activeNameplates.TryGetValue(unit, out RectTransform rectTransform))
+            if (activeNameplates.TryGetValue(unit, out Nameplate nameplate))
             {
-                Destroy(rectTransform.gameObject);
+                Destroy(nameplate.gameObject);
                 activeNameplates.Remove(unit);
             }
         }
@@ -53,19 +61,34 @@ namespace TinyRPG.UI
             foreach (var pair in activeNameplates)
             {
                 Unit unit = pair.Key;
-                RectTransform rectTransform = pair.Value;
+                Nameplate nameplate = pair.Value;
 
                 Vector3 worldPos = unit.transform.position + Vector3.up * 2;
                 Vector3 screenPosition = mainCamera.WorldToScreenPoint(worldPos);
 
                 if (screenPosition.z < 0)
                 {
-                    rectTransform.gameObject.SetActive(false);
+                    nameplate.gameObject.SetActive(false);
                 }
                 else
                 {
-                    rectTransform.gameObject.SetActive(true);
-                    rectTransform.position = new Vector3(screenPosition.x, screenPosition.y, 0);
+                    nameplate.gameObject.SetActive(true);
+                    nameplate.transform.position = new Vector3(screenPosition.x, screenPosition.y, 0);
+
+                    float distance = Vector3.Distance(unit.transform.position,
+                        playerNameplateDetector.gameObject.transform.position);
+
+                    if(distance <= fadeStartDistance || unit == playerTargeter.selectedUnit)
+                    {
+                        nameplate.SetOpacity(1);
+                    }
+                    else
+                    {
+                        float fadePercentage = Mathf.InverseLerp(playerNameplateDetector.maxVisibilityDistance, fadeStartDistance, distance);
+
+                        float finalOpacity = Mathf.Max(minNameplateOpacity, fadePercentage);
+                        nameplate.SetOpacity(finalOpacity);
+                    }
                 }
             }
         }

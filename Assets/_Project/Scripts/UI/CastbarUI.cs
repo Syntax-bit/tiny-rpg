@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace TinyRPG.UI
 {
-    public class InteractionCastbar : MonoBehaviour
+    public class CastbarUI : MonoBehaviour
     {
         [Header("Settings")]
         [SerializeField] private float fadeStartTime = .25f;
@@ -19,6 +19,7 @@ namespace TinyRPG.UI
         private TMP_Text castbarText;
         private CanvasGroup canvasGroup;
 
+        private ICastable activeCastSource;
         private Coroutine fadeCoroutine;
 
         private void Awake()
@@ -28,6 +29,22 @@ namespace TinyRPG.UI
             canvasGroup = GetComponent<CanvasGroup>();
 
             Hide();
+        }
+
+        private void Update()
+        {
+            if (activeCastSource == null || !activeCastSource.IsCurrentlyCasting) return;
+
+            UpdateProgressBar(activeCastSource.CastProgress, activeCastSource.InvertFill);
+        }
+
+        public void SetCastSource(ICastable source)
+        {
+            activeCastSource = source;
+            if(activeCastSource != null && activeCastSource.IsCurrentlyCasting)
+            {
+                Show(source.CastActionName);
+            }
         }
 
         public void Show(string prompt)
@@ -78,9 +95,11 @@ namespace TinyRPG.UI
             Hide();
         }
 
-        public void UpdateProgressBar(float normalizedFillAmount)
+        public void UpdateProgressBar(float normalizedFillAmount, bool invertFill)
         {
-            castbarFill.fillAmount = normalizedFillAmount;
+            float fillAmount = invertFill ? normalizedFillAmount : 1 - normalizedFillAmount;
+
+            castbarFill.fillAmount = fillAmount;
         }
     }
 

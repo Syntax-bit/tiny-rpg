@@ -11,6 +11,7 @@ namespace TinyRPG.Gameplay
         public event Action OnHealthChanged;
 
         [SerializeField] private UnitData unitData;
+        [SerializeField] private GameObject selectionIndicator;
 
         private int currentHealth;
 
@@ -23,6 +24,11 @@ namespace TinyRPG.Gameplay
         public float GetNormalizedCurrentHealth()
         {
             return (float)currentHealth / (float)unitData.MaxHealth;
+        }
+
+        public void SetSelectionVisual(bool isSelected)
+        {
+            selectionIndicator.SetActive(isSelected);
         }
 
         public void TakeDamage(int amount)
