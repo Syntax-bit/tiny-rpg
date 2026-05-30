@@ -6,6 +6,8 @@ namespace TinyRPG.Player
     [RequireComponent(typeof(CharacterController))]
     public class PlayerController : MonoBehaviour
     {
+        public bool IsMoving => movementDirection.sqrMagnitude > 0.01f;
+
         [Header("Settings")]
         [SerializeField] private float movementSpeed = 7f;
         [Range(0.1f, 1f)]

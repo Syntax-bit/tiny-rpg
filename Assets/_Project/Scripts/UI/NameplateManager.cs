@@ -31,10 +31,6 @@ namespace TinyRPG.UI
             playerNameplateDetector = player.GetComponentInChildren<PlayerNameplateDetector>();
         }
 
-        /// <summary>
-        /// Creates a new nameplate object for a specified unit
-        /// </summary>
-        /// <param name="newUnit"></param>
         public void CreateNewNameplate(Unit unit)
         {
             if (activeNameplates.ContainsKey(unit) || unit == null) return;
@@ -49,10 +45,12 @@ namespace TinyRPG.UI
 
         public void RemoveNameplate(Unit unit)
         {
+            if (unit == null) return;
+
             if (activeNameplates.TryGetValue(unit, out Nameplate nameplate))
             {
-                Destroy(nameplate.gameObject);
                 activeNameplates.Remove(unit);
+                Destroy(nameplate.gameObject);
             }
         }
 

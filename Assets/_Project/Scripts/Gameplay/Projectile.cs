@@ -6,12 +6,16 @@ public class Projectile : MonoBehaviour
 {
     [SerializeField] private float speed = 15f;
 
+    private Unit casterUnit;
     private Unit targetUnit;
+    private AbilityData abilityData;
     private Action onImpactCallback;
 
-    public void Initialize(Unit target)
+    public void Initialize(Unit caster, Unit target, AbilityData ability)
     {
+        casterUnit = caster;
         targetUnit = target;
+        abilityData = ability;
     }
 
     public void SetCallBack(Action callback)
@@ -38,7 +42,8 @@ public class Projectile : MonoBehaviour
         {
             if (hitUnit == targetUnit)
             {
-                onImpactCallback?.Invoke();
+                //onImpactCallback?.Invoke();
+                abilityData.Execute(casterUnit, targetUnit, targetUnit.transform.position);
 
                 Destroy(gameObject);
             }

@@ -14,6 +14,8 @@ namespace TinyRPG.Player
         private List<Unit> unitsInRange = new List<Unit>();
         private int currentTabTargetIndex;
 
+        private TargetingStrategy currentStrategy;
+
         private Camera mainCamera;
         private PlayerInputHandler playerInputHandler;
 
@@ -27,7 +29,14 @@ namespace TinyRPG.Player
         {
             if (playerInputHandler.LeftMouseButtonPressed)
             {
-                HandleSelection();
+                if(currentStrategy == null)
+                {
+                    HandleSelection();
+                }
+                else
+                {
+                    EvaluateStrategyConfirmation();
+                }
             }
 
             if(playerInputHandler.CancelButtonPressed)
@@ -40,9 +49,32 @@ namespace TinyRPG.Player
                 HandleTabTargeting();
             }
 
+            if(currentStrategy != null && currentStrategy.IsTargeting)
+            {
+                currentStrategy.Update();
+            }
+
             if(Keyboard.current.fKey.wasPressedThisFrame)
             {
                 selectedUnit.TakeDamage(10);
+            }
+        }
+
+        private void EvaluateStrategyConfirmation()
+        {
+            Vector2 mouseScreenPos = Mouse.current.position.ReadValue();
+            Ray ray = mainCamera.ScreenPointToRay(mouseScreenPos);
+
+            LayerMask mask = Physics.DefaultRaycastLayers;
+            if (currentStrategy is AOETargetingStrategy aoe) mask = aoe.groundLayerMask;
+
+            if (Physics.Raycast(ray, out RaycastHit hit, 100f, mask))
+            {
+                if (currentStrategy is AOETargetingStrategy aoeStrategy)
+                {
+                    // 🎯 Connects seamlessly into the method signature above!
+                    aoeStrategy.ConfirmClick(hit);
+                }
             }
         }
 
@@ -55,6 +87,9 @@ namespace TinyRPG.Player
                 SelectUnit(hoveredUnit);
             }
         }
+
+        public void SetCurrentStrategy(TargetingStrategy strategy) => currentStrategy = strategy;
+        public void ClearCurrentStrategy() => currentStrategy = null;
 
         public void SelectUnit(Unit unitToSelect)
         {
