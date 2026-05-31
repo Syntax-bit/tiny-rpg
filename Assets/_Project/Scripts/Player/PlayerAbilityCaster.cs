@@ -4,6 +4,7 @@ using TinyRPG.Gameplay;
 using TinyRPG.Player;
 using TinyRPG.UI;
 using UnityEngine;
+using static AbilityData;
 
 [RequireComponent(typeof(PlayerTargeter))]
 public class PlayerAbilityCaster : MonoBehaviour, ICastable
@@ -22,6 +23,7 @@ public class PlayerAbilityCaster : MonoBehaviour, ICastable
     private PlayerInputHandler playerInputHandler;
     private PlayerController playerController;
     private CooldownTracker cooldownTracker;
+    private ResourceController resourceController;
 
     public string CastActionName => currentCastingAbility != null ? currentCastingAbility.label : "";
     public float CastProgress => castTimer != null ? castTimer.Progress : 0f;
@@ -35,6 +37,7 @@ public class PlayerAbilityCaster : MonoBehaviour, ICastable
         playerInputHandler = GetComponent<PlayerInputHandler>();
         playerController = GetComponent<PlayerController>();
         cooldownTracker = GetComponent<CooldownTracker>();
+        resourceController = GetComponent<ResourceController>();
 
         castTimer = new CountdownTimer(0);
         castTimer.OnTimerStop = () => ExecuteAbility(currentCastingAbility, currentCastingTarget, currentCastWorldPosition);
@@ -96,6 +99,12 @@ public class PlayerAbilityCaster : MonoBehaviour, ICastable
                 return;
             }
 
+            if(!resourceController.CanSpendResource(actionToUse.ResourceCost))
+            {
+                Debug.LogWarning($"Not enough resource to use {actionToUse}!");
+                return;
+            }
+
             actionToUse.Use(gameObject);
         }
     }
@@ -105,18 +114,35 @@ public class PlayerAbilityCaster : MonoBehaviour, ICastable
         if (abilityData == null || IsCurrentlyCasting) return;
 
         AbilityData chosenAbility = abilityData;
-        if (chosenAbility == null) return;
 
         chosenAbility.Target(playerTargeter, (resolvedTarget) =>
         {
-            if (resolvedTarget != null && CanCastAbility(chosenAbility, resolvedTarget))
+            // 1. 🎯 WoW-Style Friendly Auto-Self-Cast Fallback
+            if (resolvedTarget == null)
             {
-                Vector3 targetWorldPos = resolvedTarget.transform.position;
+                if (abilityData.targetFilter == TargetFilter.Self ||
+                    abilityData.targetFilter == TargetFilter.Allies)
+                {
+                    resolvedTarget = playerUnit;
+                }
+            }
+
+            // 2. 🎯 Validate target restrictions safely
+            if (CanCastAbility(chosenAbility, resolvedTarget))
+            {
+                // 3. 🎯 Safely determine world coordinates without throwing NullReferenceExceptions
+                Vector3 targetWorldPos = transform.position; // Fallback position
+
                 if (chosenAbility.targetingStrategy is AOETargetingStrategy aoe)
                 {
                     targetWorldPos = aoe.GetLastConfirmedPosition();
                 }
+                else if (resolvedTarget != null)
+                {
+                    targetWorldPos = resolvedTarget.transform.position;
+                }
 
+                // 4. Start the cast sequence safely
                 StartCast(chosenAbility, resolvedTarget, targetWorldPos);
             }
         });
@@ -137,13 +163,14 @@ public class PlayerAbilityCaster : MonoBehaviour, ICastable
 
     private void ExecuteAbility(AbilityData ability, Unit target, Vector3 targetWorldPosition)
     {
-        if (ability == null || target == null)
+        if (ability == null)
         {
             CleanUpCastState();
             return;
         }
 
-        cooldownTracker.StartCooldown(ability, ability.Cooldown, ability.triggersGlobalCooldown);
+        cooldownTracker.StartCooldown(ability, ability.Cooldown, ability.triggersGlobalCooldown, .5f);
+        resourceController.SpendResource(ability.ResourceCost);
 
         if (ability.targetingStrategy is ProjectileTargeting)
         {
@@ -180,6 +207,57 @@ public class PlayerAbilityCaster : MonoBehaviour, ICastable
 
     private bool CanCastAbility(AbilityData abilityData, Unit target)
     {
+        if (abilityData.targetingStrategy is AOETargetingStrategy) return true;
+
+        if (target == null)
+        {
+            if (abilityData.targetFilter == TargetFilter.Enemies)
+            {
+                Debug.LogWarning("You must select an enemy target first!");
+                return false;
+            }
+
+            Debug.LogWarning("Invalid Target!");
+            return false;
+        }
+
+        if (!IsTargetInValidPosition(abilityData, target)) return false;
+
+        bool isAlly = playerUnit.UnitData.UnitFaction == target.UnitData.UnitFaction;
+
+        switch (abilityData.targetFilter)
+        {
+            //case TargetFilter.Self:
+            //    if (target != playerUnit)
+            //    {
+            //        Debug.LogWarning("This spell can only be cast on yourself!");
+            //        return false;
+            //    }
+            //    break;
+
+            case TargetFilter.Allies:
+                if (!isAlly)
+                {
+                    Debug.LogWarning("You can only cast this on friendly allies!");
+                    return false;
+                }
+                break;
+
+            case TargetFilter.Enemies:
+                if (isAlly)
+                {
+                    Debug.LogWarning("You cannot cast harmful spells on your allies!");
+                    return false;
+                }
+                break;
+        }
+
+        return true;
+    }
+
+    private bool IsTargetInValidPosition(AbilityData abilityData, Unit target)
+    {
+        if (target == null) return false;
         if (target == playerUnit) return true;
 
         // Distance check

@@ -15,8 +15,11 @@ MonoBehaviour:
   label: Fireball
   castTime: 1
   range: 25
-  cooldown: 1.25
+  cooldown: 0.5
+  manaCost: 22
   canCastWhileMoving: 0
+  triggersGlobalCooldown: 1
+  targetFilter: 2
   ability:
     rid: 5336749684398227623
   targetingStrategy:

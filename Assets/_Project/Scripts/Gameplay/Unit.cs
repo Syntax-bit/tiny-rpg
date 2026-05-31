@@ -5,26 +5,44 @@ using UnityEngine;
 
 namespace TinyRPG.Gameplay
 {
+    [RequireComponent(typeof(ResourceController))]
     public class Unit : MonoBehaviour
     {
         public UnitData UnitData => unitData;
 
         public event Action OnHealthChanged;
+        public event Action OnManaChanged;
+        public event Action<ActiveDoTBehavior, AbilityData> OnEffectsChanged;
+        public event Action<ActiveDoTBehavior> OnEffectExpired;
 
         [SerializeField] private UnitData unitData;
         [SerializeField] private GameObject selectionIndicator;
 
         private int currentHealth;
-        private Dictionary<AbilityData, List<ActiveDoTBehavior>> activeEffects = new Dictionary<AbilityData, List<ActiveDoTBehavior>>();
+        private Dictionary<AbilityData, ActiveDoTBehavior> activeEffects = new Dictionary<AbilityData, ActiveDoTBehavior>();
+        private ResourceController resourceController;
 
         private void Awake()
         {
             currentHealth = unitData.MaxHealth;
+            resourceController = GetComponent<ResourceController>();
         }
+
+        private void Start()
+        {
+            resourceController.OnResourceChanged += HandleResourceChange;
+        }
+
+        public Dictionary<AbilityData, ActiveDoTBehavior> GetActiveEffects() => activeEffects;
 
         public float GetNormalizedCurrentHealth()
         {
             return (float)currentHealth / (float)unitData.MaxHealth;
+        }
+
+        public float GetNormalizedCurrentResource()
+        {
+            return resourceController.GetNormalizedCurrentResource();
         }
 
         public void SetSelectionVisual(bool isSelected)
@@ -39,54 +57,58 @@ namespace TinyRPG.Gameplay
 
         public void RegisterDoT(DamageOverTimeEffect dotEffect, Unit caster, AbilityData abilityData)
         {
-            if (!activeEffects.ContainsKey(abilityData))
+            if (activeEffects.ContainsKey(abilityData) && activeEffects[abilityData] != null)
             {
-                activeEffects[abilityData] = new List<ActiveDoTBehavior>();
-            }
+                ActiveDoTBehavior runningDot = activeEffects[abilityData];
 
-            List<ActiveDoTBehavior> currentStacks = activeEffects[abilityData];
+                runningDot.Refresh();
+                runningDot.IncrementStack();
 
-            // Refresh non-stackable effects if already present
-            if (!dotEffect.IsStackable && currentStacks.Count > 0)
-            {
-                if (currentStacks[0] != null)
-                {
-                    currentStacks[0].Refresh();
-                }
+                OnEffectsChanged?.Invoke(runningDot, abilityData);
                 return;
             }
 
-            // Prevent adding new stacks if we've already reached the max stack limit configuration
-            if (dotEffect.IsStackable && currentStacks.Count >= dotEffect.MaxStackSize)
-            {
-                return;
-            }
-
-            // Create a new DoT tracking component using values passed down from the effect payload
+            // No existing DoT of this type, create a new one
             ActiveDoTBehavior dotInstance = gameObject.AddComponent<ActiveDoTBehavior>();
             dotInstance.Initialize(
                 dotEffect.Duration,
                 dotEffect.TickInterval,
                 dotEffect.DamagePerTick,
                 this,
-                dotEffect.DotRunningVfxPrefab
+                dotEffect.DotRunningVfxPrefab,
+                dotEffect.IsStackable,
+                dotEffect.MaxStackSize
             );
 
-            currentStacks.Add(dotInstance);
+            activeEffects.Add(abilityData, dotInstance);
             dotInstance.OnEffectExpired += HandleEffectExpired;
+
+            OnEffectsChanged?.Invoke(dotInstance, abilityData);
+        }
+
+        private void HandleResourceChange()
+        {
+            OnManaChanged?.Invoke();
         }
 
         private void HandleEffectExpired(ActiveDoTBehavior expiredDot)
         {
+            AbilityData keyToRemove = null;
+
             foreach (var pair in activeEffects)
             {
-                if(pair.Value.Contains(expiredDot))
+                if (pair.Value == expiredDot)
                 {
-                    pair.Value.Remove(expiredDot);
+                    keyToRemove = pair.Key;
                     break;
                 }
             }
-            //TriggerAuraUIUpdate();
+
+            if (keyToRemove != null)
+            {
+                activeEffects.Remove(keyToRemove);
+                OnEffectExpired?.Invoke(expiredDot);
+            }
         }
 
         public void TakeDamage(int amount)
@@ -111,22 +133,29 @@ namespace TinyRPG.Gameplay
 
         private void ClearAllActiveEffects()
         {
-            foreach(var pair in activeEffects)
+            foreach (var pair in activeEffects)
             {
-                foreach(var dot in pair.Value)
+                if (pair.Value != null)
                 {
-                    if(dot != null) dot.OnEffectExpired -= HandleEffectExpired;
+                    pair.Value.OnEffectExpired -= HandleEffectExpired;
+                    Destroy(pair.Value);
                 }
-
-                pair.Value.Clear();
             }
-
             activeEffects.Clear();
         }
         
         private void OnDestroy()
         {
-            PlayerUIManager.Instance.nameplateManager.RemoveNameplate(this);            
+            PlayerUIManager.Instance.nameplateManager.RemoveNameplate(this);      
+            resourceController.OnResourceChanged -= HandleResourceChange;
         }
     }
+}
+
+
+public enum Faction
+{
+    Humans,
+    Monsters,
+    Neutral
 }

@@ -13,10 +13,13 @@ MonoBehaviour:
   m_Name: Ignite
   m_EditorClassIdentifier: 
   label: Ignite
-  castTime: 1
-  range: 10
+  castTime: 0
+  range: 25
   cooldown: 2
+  manaCost: 35
   canCastWhileMoving: 0
+  triggersGlobalCooldown: 1
+  targetFilter: 2
   ability:
     rid: 5336749684398227623
   targetingStrategy:
@@ -39,8 +42,8 @@ MonoBehaviour:
         duration: 3
         tickInterval: 1
         damagePerTick: 10
-        isStackable: 0
-        maxStackSize: 1
+        isStackable: 1
+        maxStackSize: 2
         dotRunningVfxPrefab: {fileID: 646061559533259292, guid: df9f770e28671df4ea54c738049e730f, type: 3}
     - rid: 5336749751144022121
       type: {class: SelectableTargetingStrategy, ns: , asm: Assembly-CSharp}

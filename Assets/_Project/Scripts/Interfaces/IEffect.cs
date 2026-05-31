@@ -26,7 +26,6 @@ public class DamageEffectFactory : IEffectFactory<Unit>
     }
 }
 
-// 🎯 Changed from struct to class to allow clean interface mapping
 public class DamageEffect : IEffect<Unit>
 {
     private readonly int damageAmount;
@@ -60,12 +59,10 @@ public class DamageOverTimeEffectFactory : IEffectFactory<Unit>
 
     public IEffect<Unit> Create()
     {
-        // Pass blueprint metrics straight through a clean initialization constructor
         return new DamageOverTimeEffect(duration, tickInterval, damagePerTick, isStackable, maxStackSize, dotRunningVfxPrefab);
     }
 }
 
-// 🎯 CHANGED TO CLASS: Prevents boxing performance costs and tracks state parameters accurately
 public class DamageOverTimeEffect : IEffect<Unit>
 {
     public float Duration { get; }
@@ -91,6 +88,46 @@ public class DamageOverTimeEffect : IEffect<Unit>
     }
 }
 
+// ==========================================
+// CHANNELING TYPE EFFECT PIPELINE
+// ==========================================
+[Serializable]
+public class DamageChannelEffectFactory : IEffectFactory<Unit>
+{
+    public float duration = 3f;
+    public float tickInterval = 1f;
+    public int damagePerTick = 10;
+
+    [Header("Visuals")]
+    public GameObject channelVfxPrefab;
+
+    public IEffect<Unit> Create()
+    {
+        return new DamageChannelEffect(duration, tickInterval, damagePerTick, channelVfxPrefab);
+    }
+}
+    
+public class DamageChannelEffect : IEffect<Unit>
+{
+    public float Duration { get; }
+    public float TickInterval { get; }
+    public int DamagePerTick { get; }
+    public GameObject ChannelVFXPrefab { get; }
+
+    public DamageChannelEffect(float duration, float tickInterval, int damagePerTick, GameObject vfxPrefab)
+    {
+        Duration = duration;
+        TickInterval = tickInterval;
+        DamagePerTick = damagePerTick;
+        ChannelVFXPrefab = vfxPrefab;
+    }
+
+    public void Apply(Unit caster, Unit target, AbilityData abilityData)
+    {
+        // Channeling logic would be implemented here, likely involving starting a coroutine that applies damage every tickInterval for the duration of the channeling.
+    }
+}
+
 // HEALING
 
 [Serializable]
@@ -104,7 +141,6 @@ public class HealingEffectFactory : IEffectFactory<Unit>
     }
 }
 
-// 🎯 Changed from struct to class to allow clean interface mapping
 public class HealingEffect : IEffect<Unit>
 {
     private readonly int healingAmount;

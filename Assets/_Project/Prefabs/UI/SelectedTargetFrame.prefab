@@ -203,10 +203,10 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_Sprite: {fileID: 21300000, guid: a27deb91786d3d345a6e14c8b786d25f, type: 3}
-  m_Type: 0
+  m_Type: 3
   m_PreserveAspect: 0
   m_FillCenter: 1
-  m_FillMethod: 4
+  m_FillMethod: 0
   m_FillAmount: 1
   m_FillClockwise: 1
   m_FillOrigin: 0
@@ -624,6 +624,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   healthFill: {fileID: 9116078969284329353}
   healthText: {fileID: 4103947400118668533}
+  manaFill: {fileID: 7863496741945755544}
   nameText: {fileID: 2712359153407134882}
 --- !u!1 &5844536737415294962
 GameObject:

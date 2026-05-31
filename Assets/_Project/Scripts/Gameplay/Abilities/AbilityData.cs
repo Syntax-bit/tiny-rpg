@@ -11,8 +11,19 @@ public class AbilityData : ScriptableObject, IHotbarAction
     [Range(0f, 5f)] public float castTime = 1f;
     public float range = 10f;
     [Range(0f, 60f)] public float cooldown = 5f;
+    public int manaCost = 15;
     public bool canCastWhileMoving;
     public bool triggersGlobalCooldown = true;
+
+    public TargetFilter targetFilter = TargetFilter.Enemies;
+
+    public enum TargetFilter
+    {
+        Self,
+        Allies,
+        Enemies,
+        Anyone
+    }
 
     [Header("Gameplay Effects")]
     [SerializeReference] public Ability ability;
@@ -37,6 +48,8 @@ public class AbilityData : ScriptableObject, IHotbarAction
     public string Label => label;
     public Sprite Icon => icon;
     public float Cooldown => cooldown;
+    public int ResourceCost => manaCost;
+    public ResourceType ResourceType => ResourceType.Mana;
 
     void OnEnable()
     {

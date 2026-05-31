@@ -54,7 +54,33 @@ namespace TinyRPG.UI
             }
         }
 
+        public void HighlightNameplate(Unit unit)
+        {
+            if (!activeNameplates.ContainsKey(unit) || unit == null) return;
+
+            if (activeNameplates.TryGetValue(unit, out Nameplate nameplate))
+            {
+                nameplate.Highlight();
+                nameplate.transform.SetAsLastSibling();
+            }
+        }
+
+        public void UnhighlightNameplate(Unit unit)
+        {   
+            if (!activeNameplates.ContainsKey(unit) || unit == null) return;
+
+            if (activeNameplates.TryGetValue(unit, out Nameplate nameplate))
+            {
+                nameplate.Unhighlight();
+            }
+        }
+
         private void LateUpdate()
+        {
+            UpdateNameplates();
+        }
+
+        private void UpdateNameplates()
         {
             foreach (var pair in activeNameplates)
             {
@@ -76,7 +102,8 @@ namespace TinyRPG.UI
                     float distance = Vector3.Distance(unit.transform.position,
                         playerNameplateDetector.gameObject.transform.position);
 
-                    if(distance <= fadeStartDistance || unit == playerTargeter.selectedUnit)
+                    // Ensure selected target nameplate is always fully visible regardless of distance
+                    if (distance <= fadeStartDistance || unit == playerTargeter.selectedUnit)
                     {
                         nameplate.SetOpacity(1);
                     }

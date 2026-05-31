@@ -9,6 +9,7 @@ namespace TinyRPG.UI
     {
         [SerializeField] private Image healthFill;
         [SerializeField] private TMP_Text healthText;
+        [SerializeField] private Image manaFill;
 
         [SerializeField] private TMP_Text nameText;
 
@@ -19,6 +20,8 @@ namespace TinyRPG.UI
             healthFill.fillAmount = trackedUnit.GetNormalizedCurrentHealth();
             healthText.text = $"{trackedUnit.GetNormalizedCurrentHealth() * 100}%";
 
+            manaFill.fillAmount = trackedUnit.GetNormalizedCurrentResource();
+
             nameText.text = trackedUnit.UnitData.UnitName;
         }
 
@@ -28,10 +31,12 @@ namespace TinyRPG.UI
             if (trackedUnit != null)
             {
                 trackedUnit.OnHealthChanged -= UpdateUnitFrame;
+                trackedUnit.OnManaChanged -= UpdateUnitFrame;
             }
 
             trackedUnit = unit;
             trackedUnit.OnHealthChanged += UpdateUnitFrame;
+            trackedUnit.OnManaChanged += UpdateUnitFrame;
 
             gameObject.SetActive(true);
             UpdateUnitFrame();
@@ -42,6 +47,7 @@ namespace TinyRPG.UI
             if (trackedUnit != null)
             {
                 trackedUnit.OnHealthChanged -= UpdateUnitFrame;
+                trackedUnit.OnManaChanged -= UpdateUnitFrame;
             }
 
             gameObject.SetActive(false);

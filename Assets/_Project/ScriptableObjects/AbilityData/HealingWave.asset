@@ -17,6 +17,8 @@ MonoBehaviour:
   range: 10
   cooldown: 2
   canCastWhileMoving: 0
+  triggersGlobalCooldown: 1
+  targetFilter: 1
   ability:
     rid: 5336749684398227623
   targetingStrategy:

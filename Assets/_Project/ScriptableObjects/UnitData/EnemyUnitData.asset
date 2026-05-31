@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: EnemyUnitData
   m_EditorClassIdentifier: 
   unitName: test
+  faction: 1
   baseLevel: 6
   maxHealth: 100
   baseMoveSpeed: 8

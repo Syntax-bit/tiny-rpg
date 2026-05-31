@@ -53,11 +53,6 @@ namespace TinyRPG.Player
             {
                 currentStrategy.Update();
             }
-
-            if(Keyboard.current.fKey.wasPressedThisFrame)
-            {
-                selectedUnit.TakeDamage(10);
-            }
         }
 
         private void EvaluateStrategyConfirmation()
@@ -72,7 +67,6 @@ namespace TinyRPG.Player
             {
                 if (currentStrategy is AOETargetingStrategy aoeStrategy)
                 {
-                    // 🎯 Connects seamlessly into the method signature above!
                     aoeStrategy.ConfirmClick(hit);
                 }
             }
@@ -99,6 +93,7 @@ namespace TinyRPG.Player
             if (oldUnit != null)
             {
                 oldUnit.SetSelectionVisual(false);
+                PlayerUIManager.Instance.nameplateManager.UnhighlightNameplate(oldUnit);
 
                 if (!unitsInRange.Contains(oldUnit))
                 {
@@ -110,9 +105,16 @@ namespace TinyRPG.Player
 
             if (selectedUnit != null)
             {
+                PlayerUIManager.Instance.nameplateManager.HighlightNameplate(selectedUnit);
                 PlayerUIManager.Instance.nameplateManager.CreateNewNameplate(selectedUnit);
                 PlayerUIManager.Instance.ShowSelectedTargetFrame(selectedUnit);
                 selectedUnit.SetSelectionVisual(true);
+
+                int trackingIndex = unitsInRange.IndexOf(selectedUnit);
+                if (trackingIndex != -1)
+                {
+                    currentTabTargetIndex = trackingIndex;
+                }
             }
         }
 
@@ -121,6 +123,7 @@ namespace TinyRPG.Player
             if (selectedUnit != null)
             {
                 selectedUnit.SetSelectionVisual(false);
+                PlayerUIManager.Instance.nameplateManager.UnhighlightNameplate(selectedUnit);
 
                 if(!unitsInRange.Contains(selectedUnit))
                 {
@@ -160,19 +163,24 @@ namespace TinyRPG.Player
             if (unit == null || !unitsInRange.Contains(unit)) return;
 
             unitsInRange.Remove(unit);
+
+            if (currentTabTargetIndex >= unitsInRange.Count)
+            {
+                currentTabTargetIndex = Mathf.Max(0, unitsInRange.Count - 1);
+            }
         }
 
         private void HandleTabTargeting()
         {
             if (unitsInRange.Count == 0) return;
 
-            SelectUnit(unitsInRange[currentTabTargetIndex]);
-
             currentTabTargetIndex++;
-            if (currentTabTargetIndex > unitsInRange.Count - 1)
+            if (currentTabTargetIndex >= unitsInRange.Count)
             {
                 currentTabTargetIndex = 0;
             }
+
+            SelectUnit(unitsInRange[currentTabTargetIndex]);
         }
     }
 }
