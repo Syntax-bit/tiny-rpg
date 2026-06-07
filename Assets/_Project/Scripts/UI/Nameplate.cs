@@ -26,7 +26,6 @@ namespace TinyRPG.UI
             canvasGroup = GetComponent<CanvasGroup>();
         }
 
-
         public void Initialize(Unit unit)
         {
             if (unit != null)
@@ -131,6 +130,10 @@ namespace TinyRPG.UI
             UnsubscribeFromUnitEvents();
         }
 
+        private void OnDisable()
+        {
+            UnsubscribeFromUnitEvents();
+        }
     }
 }
 

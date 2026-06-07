@@ -115,37 +115,66 @@ public class PlayerAbilityCaster : MonoBehaviour, ICastable
 
         AbilityData chosenAbility = abilityData;
 
+        bool isFriendlySpell = chosenAbility.targetFilter == TargetFilter.Self ||
+                           chosenAbility.targetFilter == TargetFilter.Allies;
+
+        if (isFriendlySpell)
+        {
+            bool targetingEnemy = playerTargeter.selectedUnit != null &&
+                playerTargeter.selectedUnit.UnitData.UnitFaction != playerUnit.UnitData.UnitFaction;
+
+            if (playerTargeter.selectedUnit == null || playerTargeter.selectedUnit == playerUnit || targetingEnemy)
+            {
+
+                ExecuteSelfCast(chosenAbility);
+                return;
+            }
+        }
+
         chosenAbility.Target(playerTargeter, (resolvedTarget) =>
         {
-            // 1. 🎯 WoW-Style Friendly Auto-Self-Cast Fallback
-            if (resolvedTarget == null)
+            // Secondary fallback just in case a strategy resolves to null internally
+            if (resolvedTarget == null && isFriendlySpell)
             {
-                if (abilityData.targetFilter == TargetFilter.Self ||
-                    abilityData.targetFilter == TargetFilter.Allies)
-                {
-                    resolvedTarget = playerUnit;
-                }
+                resolvedTarget = playerUnit;
             }
 
-            // 2. 🎯 Validate target restrictions safely
-            if (CanCastAbility(chosenAbility, resolvedTarget))
-            {
-                // 3. 🎯 Safely determine world coordinates without throwing NullReferenceExceptions
-                Vector3 targetWorldPos = transform.position; // Fallback position
-
-                if (chosenAbility.targetingStrategy is AOETargetingStrategy aoe)
-                {
-                    targetWorldPos = aoe.GetLastConfirmedPosition();
-                }
-                else if (resolvedTarget != null)
-                {
-                    targetWorldPos = resolvedTarget.transform.position;
-                }
-
-                // 4. Start the cast sequence safely
-                StartCast(chosenAbility, resolvedTarget, targetWorldPos);
-            }
+            ProcessCastFinalization(chosenAbility, resolvedTarget);
         });
+    }
+
+    private void ExecuteSelfCast(AbilityData abilityData)
+    {
+        if (CanCastAbility(abilityData, playerUnit))
+        {
+            Vector3 targetWorldPos = transform.position;
+
+            if (abilityData.targetingStrategy is AOETargetingStrategy aoe)
+            {
+                targetWorldPos = aoe.GetLastConfirmedPosition();
+            }
+
+            StartCast(abilityData, playerUnit, targetWorldPos);
+        }
+    }
+
+    private void ProcessCastFinalization(AbilityData abilityData, Unit resolvedTarget)
+    {
+        if (CanCastAbility(abilityData, resolvedTarget))
+        {
+            Vector3 targetWorldPos = transform.position;
+
+            if (abilityData.targetingStrategy is AOETargetingStrategy aoe)
+            {
+                targetWorldPos = aoe.GetLastConfirmedPosition();
+            }
+            else if (resolvedTarget != null)
+            {
+                targetWorldPos = resolvedTarget.transform.position;
+            }
+
+            StartCast(abilityData, resolvedTarget, targetWorldPos);
+        }
     }
 
     private void StartCast(AbilityData abilityData, Unit target, Vector3 worldPos)

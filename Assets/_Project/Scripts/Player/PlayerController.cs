@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace TinyRPG.Player
 {
@@ -56,7 +57,7 @@ namespace TinyRPG.Player
 
             Vector3 horizontalDirection = Vector3.zero;
 
-            if (playerInputHandler.BothMouseButtonsHeld)
+            if (playerInputHandler.BothMouseButtonsHeld && !DragDropManager.Instance.IsDragging && !EventSystem.current.IsPointerOverGameObject())
             {
                 float strafeInput = playerInputHandler.MovementInput.x;
                 if (Mathf.Abs(strafeInput) > 0.01f)

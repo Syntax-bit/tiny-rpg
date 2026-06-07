@@ -2,6 +2,7 @@ using UnityEngine;
 using Unity.Cinemachine;
 using UnityEngine.InputSystem;
 using System.Collections;
+using UnityEngine.EventSystems;
 
 namespace TinyRPG.Player
 {
@@ -46,6 +47,9 @@ namespace TinyRPG.Player
 
         private void Update()
         {
+            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject() ||
+                DragDropManager.Instance.IsDragging) return;
+
             bool isLooking = playerInputHandler.LeftMouseButtonHeld;
 
             lookXController.Enabled = isLooking;

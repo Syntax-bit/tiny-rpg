@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System;
+using TinyRPG.UI;
 
 namespace TinyRPG.Player
 {
@@ -18,13 +19,17 @@ namespace TinyRPG.Player
         public bool LeftMouseButtonReleased => leftMouseButtonAction.WasReleasedThisFrame();
         public bool RightMouseButtonPressed => rightMouseButtonAction.WasPressedThisFrame();
         public bool BothMouseButtonsPressed => bothButtonsAction.WasPressedThisFrame();
-        public bool CancelButtonPressed => cancelAction.WasPressedThisFrame();
-        public bool TabTargetButtonPressed => tabTargetAction.WasPressedThisFrame();
 
         // --- CONTINUOUS HELD STATES ---
         public bool LeftMouseButtonHeld { get; private set; }
         public bool RightMouseButtonHeld { get; private set; }
         public bool BothMouseButtonsHeld { get; private set; }
+
+        // --- GAMEPLAY ---
+        public bool CancelButtonPressed => cancelAction.WasPressedThisFrame();
+        public bool TabTargetButtonPressed => tabTargetAction.WasPressedThisFrame();
+        public bool InventoryTogglePressed => inventoryToggleAction.WasPressedThisFrame();
+
 
         public event Action<int> OnHotbarPressed;
 
@@ -37,10 +42,12 @@ namespace TinyRPG.Player
         private InputAction bothButtonsAction;
         private InputAction leftMouseButtonAction;
         private InputAction rightMouseButtonAction;
+
+        //Gameplay-specific actions
         private InputAction cancelAction;
         private InputAction tabTargetAction;
-
         private InputAction hotbarPressedAction;
+        private InputAction inventoryToggleAction;
 
         private void Awake()
         {
@@ -53,12 +60,21 @@ namespace TinyRPG.Player
             bothButtonsAction = playerActionMap.FindAction("BothMouseButtons");
             leftMouseButtonAction = playerActionMap.FindAction("LeftClick");
             rightMouseButtonAction = playerActionMap.FindAction("RightClick");
+            
             cancelAction = playerActionMap.FindAction("Cancel");
             tabTargetAction = playerActionMap.FindAction("TabTarget");
-
             hotbarPressedAction = combatActionMap.FindAction("HotbarPressed");
+            inventoryToggleAction = playerActionMap.FindAction("InventoryToggle");
 
             SetupInputEvents();
+        }
+
+        private void Update()
+        {
+            if(InventoryTogglePressed)
+            {
+                PlayerUIManager.Instance.ToggleInventoryWindow();
+            }
         }
 
         private void SetupInputEvents()

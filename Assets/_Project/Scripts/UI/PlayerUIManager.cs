@@ -7,10 +7,12 @@ namespace TinyRPG.UI
     {
         public static PlayerUIManager Instance;
 
-        [field: SerializeField] public NameplateManager nameplateManager {  get; private set; }
+        [field: SerializeField] public NameplateManager nameplateManager { get; private set; }
         [SerializeField] private UnitFrame playerUnitFrame;
         [SerializeField] private UnitFrame selectedTargetUnitFrame;
         [SerializeField] private CastbarUI castBar;
+
+        [SerializeField] private GameObject inventoryWindow;
 
         private Unit playerUnit;
 
@@ -41,5 +43,16 @@ namespace TinyRPG.UI
         // Target Frames
         public void ShowSelectedTargetFrame(Unit unit) => selectedTargetUnitFrame.Show(unit);
         public void HideSelectedTargetFrame() => selectedTargetUnitFrame.Hide();
+        // Inventory
+        public void ToggleInventoryWindow()
+        {
+            bool isCurrentlyActive = inventoryWindow.activeSelf;
+            inventoryWindow.SetActive(!isCurrentlyActive);
+
+            if (!isCurrentlyActive)
+            {
+                inventoryWindow.transform.SetAsLastSibling();
+            }
+        }
     }
 }

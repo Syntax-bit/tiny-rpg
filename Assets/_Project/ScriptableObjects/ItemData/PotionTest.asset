@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c7543f7ed753b4e4a9d34daea5410ee0, type: 3}
+  m_Name: PotionTest
+  m_EditorClassIdentifier: 
+  label: PotionTest
+  icon: {fileID: 21300000, guid: 900fc234b4645884b971abb62cf8ec1a, type: 3}
+  isStackable: 0
+  stackSize: 1
+  cooldown: 0
+  resourceType: 0
+  resourceCost: 0
