@@ -23,11 +23,11 @@ The primary objective of this repository is not just to build a functional game,
 This project is divided into several core gameplay subsystems, simulating a miniature vertical slice of a classic RPG layout:
 
 ### 🎮 Player Locomotion & Exploration
-* [ ] **3rd-Person Movement:** Kinematic player movement with fluid camera tracking.
+* [x] **3rd-Person Movement:** Kinematic player movement with fluid camera tracking.
 * [ ] **Mount System:** Speed-modifying state shift allowing players to summon, mount, and dismount seamlessly.
 
 ### ⚔️ Combat & Gameplay Loop
-* [ ] **Tab-Targeting Engine:** Smart raycasting/distance utility system to select, cycle, and track hostile targets.
+* [x] **Tab-Targeting Engine:** Smart raycasting/distance utility system to select, cycle, and track hostile targets.
 * [ ] **Abilities (Melee & Ranged):** Highly modular ability framework supporting cast times, instant strikes, and conditional requirements.
 * [ ] **Aura & Status Effect System:** Flexible handler managing core debuff categories like Damage over Time (DoT), Slows, Roots, and crowd control.
 * [ ] **Ability Resource Engine:** Managing secondary execution resources (e.g., Mana, Energy, or Rage) to govern mechanical costs.
@@ -37,7 +37,7 @@ This project is divided into several core gameplay subsystems, simulating a mini
 * [ ] **Leveling Pipeline:** Core experience curves governing level scaling and character attribute increases.
 
 ### 🎒 Inventories, Items & Interactions
-* [ ] **Dynamic Inventory Layout:** Grid-based inventory array utilizing event-driven drag-and-drop operations.
+* [x] **Dynamic Inventory Layout:** Grid-based inventory array utilizing event-driven drag-and-drop operations.
 * [ ] **Equipment System:** Distinct equipment slots altering structural player math, stats, and visible geometry properties.
 * [ ] **Contextual World Interactions:** Decoupled interactive environment structures handling distance-validated objects (e.g., world loot sources).
 
@@ -50,7 +50,7 @@ This project is divided into several core gameplay subsystems, simulating a mini
 
 ## ⚙️ Tech Stack & Patterns Behind the Scenes
 
-* **Engine:** Unity 2022.3+ (or your specific version)
+* **Engine:** Unity 6
 * **Language:** C#
 * **Input Infrastructure:** New Unity Input System Package
 * **Patterns Used:**
